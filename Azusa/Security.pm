@@ -1,9 +1,11 @@
 #!/usr/bin/perl
-package Azusa::Template;
+package Azusa::Example;
 
 use strict;
 use warnings;
 use vars qw/$VERSION/;
+use Digest::SHA1 qw/sha1_hex/;
+use Digest::MD5  qw/md5_hex/;
 
 $VERSION = '0.0.2';
 
@@ -15,7 +17,7 @@ sub new {
                	$self->{$_[$x]} = $_[$x+1];
        	}
        	$self->{ 'debug_depth' } = 0;
-       	debug( $self, 'Creating new Azusa::Template object: '.$self, 10 );
+       	debug( $self, 'Creating new Azusa::Example object: '.$self, 10 );
        	$self->{ 'debug_depth' } = 1;
        	return( $self );
 }
@@ -28,33 +30,15 @@ sub debug {
                	$subroutine                                   = "main::main" if( !$subroutine );
                	$filename                                     = $0 if( !$filename );
                	$message                                      = '(debug) '.( split( /::/, $subroutine ) )[-1].'@'.$filename.' - '.$message."\n";
-               	print STDERR $message;
+               	print( $message );
        	}
        	return( undef );
 }
 
-sub render {
-	my ($self, $file, %variables) = @_;
-	$self->debug('Rendering template '.$file, 0);
-	my ($fh, @temp, $template);
-	open($fh, '<', './templates/'.$file.'.tpl');
-	$self->debug($@, 0) if ($@); 
-	return(1) if ($@); 
-	@temp     = <$fh>;
-	$template = join('',  @temp);
-	close($fh);
-
-	# substitute in external templates
-	while ($template =~ /\%\{([[:alnum:]_\/]+)\}/g) {
-		my $newfile = $1; 
-		my $temp = $self->render($newfile, %variables);
-		$template =~ s/\%\{$newfile\}/$temp/;
-	}
-	# swap out individual variables
-	foreach my $key (sort(keys(%variables))) {
-		$template =~ s/\${$key}/$variables{$key}/g;
-	}
-	return($template);
+sub hash {
+	my ($text) = @_;
+	return(sha1_hex(md5_hex(sha1_hex($text))));
 }
+
 
 1;
