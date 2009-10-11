@@ -35,5 +35,18 @@ sub debug {
        	return( undef );
 }
 
+sub render {
+	my ($self, $file, %variables) = @_;
+	my ($fh, @temp, $template);
+	open($fh, '<', './templates/'.$file.'.tpl');
+	return(1) if ($@);
+	@temp     = <$fh>;
+	$template = join('',  @temp);
+	close($fh);
+	foreach my $key (sort(keys(%variables))) {
+		$template =~ s/\${$key}/$variables{$key}/g;
+	}
+	return($template);
+}
 
 1;
