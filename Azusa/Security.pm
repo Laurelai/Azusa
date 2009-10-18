@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-package Azusa::Example;
+package Azusa::Security;
 
 use strict;
 use warnings;
@@ -17,7 +17,7 @@ sub new {
                	$self->{$_[$x]} = $_[$x+1];
        	}
        	$self->{ 'debug_depth' } = 0;
-       	debug( $self, 'Creating new Azusa::Example object: '.$self, 10 );
+       	debug( $self, 'Creating new Azusa::Security object: '.$self, 10 );
        	$self->{ 'debug_depth' } = 1;
        	return( $self );
 }
@@ -37,7 +37,7 @@ sub debug {
 
 sub hash {
 	my ($text) = @_;
-	return(sha1_hex(md5_hex(sha1_hex($text))));
+	return(md5_hex($text));
 }
 
 

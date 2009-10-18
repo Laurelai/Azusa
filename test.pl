@@ -18,4 +18,5 @@ my $sql  = Azusa::MySQL->new(verbosity => 10,
 		      db_host => 'mysql.frantech.ca', 
 		      db_name => 'fifo');
 $sql->login();
-$sql->query('SELECT piss FROM dicks WHERE balls = %s AND urine = %d', "fat 'cocks", 101);
+my ($uid, $email) = $sql->query('SELECT uid,email FROM passwd WHERE username = %s and uid = %d', "test", 1);
+printf('Got: uid %d, email %s'."\n", $uid, $email);

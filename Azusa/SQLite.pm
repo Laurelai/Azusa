@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-package Azusa::MySQL;
+package Azusa::SQLite;
 
 use strict;
 use warnings;
@@ -7,7 +7,7 @@ use vars qw/$VERSION/;
 
 # databases
 use DBI;
-use DBD::mysql;
+use DBD::SQLite;
 
 $VERSION = '0.0.2';
 
@@ -18,8 +18,9 @@ sub new {
        	for( my $x = 0; $x < $#_; $x += 2 ){
                	$self->{$_[$x]} = $_[$x+1];
        	}
+	$self->{db_file} = 'default.db' if (!$self->{db_file});
        	$self->{ 'debug_depth' } = 0;
-       	debug( $self, 'Creating new Azusa::MySQL object: '.$self, 10 );
+       	debug( $self, 'Creating new Azusa::SQLite object: '.$self, 10 );
        	$self->{ 'debug_depth' } = 1;
        	return( $self );
 }
@@ -40,9 +41,7 @@ sub debug {
 sub login {
 	my( $self ) = @_;
         my( $temp )           = DBI->connect(sprintf(
-                'DBI:mysql:%s:%s', $self->{db_name}, $self->{db_host}),
-                $self->{db_user},
-                $self->{db_pass});
+                'DBI:SQLite:dbname=%s', $self->{db_file}), '', '');
         if (!$temp || DBI->errstr) {
 		$self->debug('Failed to login to server: '.DBI->errstr, 0);
                 return(1);
@@ -65,6 +64,8 @@ sub query {
                 $qstring .= ', '.$isvar.'$_['.$x.']'.$isvar2;
         }
 	$qstring .= '));';
+	$self->debug($query, 0);
+	$self->debug($qstring, 0);
         eval($qstring);
         $qh->execute;
         $self->{query_count}++;
@@ -75,9 +76,5 @@ sub query {
 	return(@return);
 }
 
-sub last_insert_id {
-	my ($self) = @_;
-	my $dbh    = $self->{db_handle};
-	return($dbh->last_insert_id(undef, undef, undef, undef));
-}
 1;
+
