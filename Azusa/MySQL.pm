@@ -61,7 +61,7 @@ sub query {
                 next if (!$_[$x]);
                 my ($isvar, $isvar2);
                 ($isvar, $isvar2) = ('$dbh->quote(', ')')
-                        if ($_[$x] =~ /([[:alpha:]]|')/);
+                        if ($_[$x] !~ /^(\d+)$/);
                 $qstring .= ', '.$isvar.'$_['.$x.']'.$isvar2;
         }
 	$qstring .= '));';

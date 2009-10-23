@@ -18,5 +18,5 @@ my $sql  = Azusa::MySQL->new(verbosity => 10,
 		      db_host => 'mysql.frantech.ca', 
 		      db_name => 'fifo');
 $sql->login();
-my ($uid, $email) = $sql->query('SELECT uid,email FROM passwd WHERE username = %s and uid = %d', "test", 1);
+my ($uid, $email) = $sql->query('SELECT uid,email FROM passwd WHERE email LIKE %s', '%solar%');
 printf('Got: uid %d, email %s'."\n", $uid, $email);
