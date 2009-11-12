@@ -11,6 +11,8 @@ sub new {
        	my $self = shift;
        	# create a new Azusa object
        	$self = bless( { }, $self );
+	$self->{theme} = 'default';
+	$self->{path}  = './templates';
        	for( my $x = 0; $x < $#_; $x += 2 ){
                	$self->{$_[$x]} = $_[$x+1];
        	}
@@ -36,7 +38,6 @@ sub debug {
 
 sub render {
 	my ($self, $file, %variables) = @_;
-	my ($theme)                   = $self->{theme};
 	use DB;
 	my ($depth, %called, $recursion) = (0, undef, undef);
 	$| = 1;
@@ -59,9 +60,9 @@ sub render {
 #	print STDERR "\n";
 	return if ($depth > 5);
 	# tabs always sucked in this regard.
-	printf STDERR (('['.$depth.'] |'."-" x $depth).' Rendering template '.$file.', theme '.$theme."\n");
+	printf STDERR (('['.$depth.'] |'."-" x $depth).' Rendering template '.$file.', theme '.$'.$self->{theme}.'."\n");
 	my ($fh, @temp, $template);
-	open($fh, '<', './templates/'.$theme.'/'.$file.'.tpl');
+	open($fh, '<', $self->{path}.'/'.$self->{theme}.'/'.$file.'.tpl');
 	$self->debug($@, 0) if ($@); 
 	return(1) if ($@); 
 	@temp     = <$fh>;
