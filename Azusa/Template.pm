@@ -60,7 +60,6 @@ sub render {
 #	print STDERR "\n";
 	return if ($depth > 5);
 	# tabs always sucked in this regard.
-	printf STDERR (('['.$depth.'] |'."-" x $depth).' Rendering template '.$file.', theme '.$'.$self->{theme}.'."\n");
 	my ($fh, @temp, $template);
 	open($fh, '<', $self->{path}.'/'.$self->{theme}.'/'.$file.'.tpl');
 	$self->debug($@, 0) if ($@); 
