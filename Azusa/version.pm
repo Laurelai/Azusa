@@ -2,6 +2,6 @@
 use strict;
 package Azusa::version;
 
-sub version { '0.4 $Rev$'; }
+sub version { '0.5 $Rev$'; }
 
 1;
