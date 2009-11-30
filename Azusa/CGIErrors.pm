@@ -24,9 +24,10 @@ BEGIN {
                        	my $sub  = (caller($x))[3];
                        	my $addr = \&$sub;
                        	$addr    =~ s/(CODE\(|\))//g;
-                       	$sub     =~ s/\(eval\)/\[sandbox create\]/g;
-                       	$sandbox = 1 if ($sub =~ /sandbox create/);
-                       	$traceback .= (('&nbsp;' x 2) x $z).($z ? '\_ ' : ' |-').$addr.': <strong>'.$sub.'();</strong> at line '.(caller($x))[2]."\n";
+                       	$sub     =~ s/\(eval\)/[eval statement]/g;
+                       	$sandbox = 1 if ($sub =~ /eval statement/);
+			$sandbox = 0 if ($sub =~ /BEGIN/);
+                       	$traceback .= (('&nbsp;' x 2) x $z).($z ? '\_ ' : ' |-').$addr.': <strong>'.$sub.'</strong> at line '.(caller($x))[2]."\n";
                	}
                	print <<EOF;
 Content-type: text/html

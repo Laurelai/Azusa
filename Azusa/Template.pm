@@ -5,7 +5,7 @@ use strict;
 # use warnings;
 use vars qw/$VERSION/;
 no warnings;
-$VERSION = '0.0.2';
+$VERSION = Azusa::version::version();
 
 sub new {
        	my $self = shift;

@@ -4,10 +4,8 @@ package Azusa::Example;
 use strict;
 use warnings;
 use vars qw/$VERSION/;
-# encoding
-use MIME::Base64;
-
-$VERSION = '0.0.2';
+use Azusa::version;
+$VERSION = Azusa::version::version();
 
 sub new {
        	my $self = shift;
@@ -30,7 +28,7 @@ sub debug {
                	$subroutine                                   = "main::main" if( !$subroutine );
                	$filename                                     = $0 if( !$filename );
                	$message                                      = '(debug) '.( split( /::/, $subroutine ) )[-1].'@'.$filename.' - '.$message."\n";
-               	print( $message );
+               	print STDERR ($message );
        	}
        	return( undef );
 }

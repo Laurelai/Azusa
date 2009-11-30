@@ -32,7 +32,7 @@ sub debug {
                	$subroutine                                   = "main::main" if( !$subroutine );
                	$filename                                     = $0 if( !$filename );
                	$message                                      = '(debug) '.( split( /::/, $subroutine ) )[-1].'@'.$filename.' - '.$message."\n";
-               	print( $message );
+               	print STDERR ( $message );
        	}
        	return( undef );
 }
