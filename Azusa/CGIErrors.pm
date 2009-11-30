@@ -6,6 +6,11 @@ BEGIN {
 	my $azusa_version = Azusa::version::version();
        	$SIG{__DIE__}  = \&handleErrors;
        	$SIG{__WARN__} = \&handleWarnings;
+	
+	# this code should be removed for production use
+	close(STDERR);
+	open(STDERR, '>>', 'cgi.stderr'); 
+
        	sub handleErrors {
                	my ($error) = @_;
                	my ($module, $routine) = (caller(1))[0,3];
