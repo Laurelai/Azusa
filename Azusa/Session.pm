@@ -39,6 +39,7 @@ sub new {
        	return( $self );
 }
 
+# XXX: should we make these more than one-liners? 
 sub param  { if (!$_[2]) { return $_[0]->{session}->param($_[1]); } else { return $_[0]->{session}->param($_[1], $_[2]); } }
 sub expire { $_[0]->{session}->expire($_[1], $_[2]); }
 sub id     { return $_[0]->{session}->id; }
