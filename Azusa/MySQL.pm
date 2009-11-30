@@ -14,7 +14,8 @@ $VERSION = '0.0.2';
 sub new {
        	my $self = shift;
        	# create a new Azusa object
-       	$self = bless( { }, $self );
+       	$self = bless( { }, $self );        
+	$self->{verbosity} = 0;
        	for( my $x = 0; $x < $#_; $x += 2 ){
                	$self->{$_[$x]} = $_[$x+1];
        	}

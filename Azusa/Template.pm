@@ -13,6 +13,7 @@ sub new {
        	$self = bless( { }, $self );
 	$self->{theme} = 'default';
 	$self->{path}  = './templates';
+	$self->{verbosity} = 0;
        	for( my $x = 0; $x < $#_; $x += 2 ){
                	$self->{$_[$x]} = $_[$x+1];
        	}
