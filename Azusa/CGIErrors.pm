@@ -32,7 +32,7 @@ BEGIN {
                        	$sub     =~ s/\(eval\)/[eval statement]/g;
                        	$sandbox = 1 if ($sub =~ /eval statement/);
 			$sandbox = 0 if ($sub =~ /BEGIN/);
-                       	$traceback .= (('&nbsp;' x 2) x $z).($z ? '\_ ' : ' |-').$addr.': <strong>'.$sub.'</strong> at line '.(caller($x))[2]."\n";
+                       	$traceback .= (('&nbsp;' x 2) x $z).($z ? '\_ ' : ' |-').$addr.': <strong>'.$sub.'</strong> at line '.(caller($x))[2].' in file '.(caller($x))[1]."\n";
                	}
                	print <<EOF;
 Content-type: text/html

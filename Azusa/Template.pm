@@ -11,9 +11,13 @@ sub new {
        	my $self = shift;
        	# create a new Azusa object
        	$self = bless( { }, $self );
+
+	# define some default values
 	$self->{theme} = 'default';
 	$self->{path}  = './templates';
-	$self->{verbosity} = 0;
+
+	$self->{verbosity}    = 0;
+	$self->{errors_fatal} = 0;
        	for( my $x = 0; $x < $#_; $x += 2 ){
                	$self->{$_[$x]} = $_[$x+1];
        	}
@@ -42,29 +46,28 @@ sub render {
 	use DB;
 	my ($depth, %called, $recursion) = (0, undef, undef);
 	$| = 1;
-#	print STDERR 'call tree: ';
 	for (my $x = 0; (caller($x))[3]; $x++) {
 		# hm, well, i don't think i can check the args with caller() sec
-#		print STDERR "[$x] ".(caller($x))[3]."(";
 		my (@args) = called_args($x);
-#		print STDERR $args[1].")\n";
-#		print STDERR ' '.$args[1];
 		$called{$args[1]}++;
-#		print STDERR $args[0]."->render(".$args[1].", ".$args[2]."); called ".$called{$args[1]}." times (run from ".$file.")\n";
 		if ($called{$args[1]} >= 2) {
-			print STDERR "*WARNING* Recursion detected in template ".(called_args($x-1))[1].": request for ".$args[1].". Cancelling replacement.\n";
 			$recursion = 1;
+			print STDERR "*ERROR* Recursion detected in template ".(called_args($x-1))[1].": request for ".$args[1].". Cancelling replacement.\n";
 			return('*ERROR* RECURSION DETECTED. Template: '.$args[1].' (from '.$file.')');
 		}
 		$depth++;
 	}
-#	print STDERR "\n";
-	return if ($depth > 5);
+#	return if ($depth > 5);
 	# tabs always sucked in this regard.
 	my ($fh, @temp, $template);
 	open($fh, '<', $self->{path}.'/'.$self->{theme}.'/'.$file.'.tpl');
-	$self->debug($@, 0) if ($@); 
-	return(1) if ($@); 
+	$self->debug($!, 0) if ($!); 
+	if ($self->{errors_fatal}) {
+		die('*ERROR* Failed to render template '.$self->{path}.'/'.$self->{theme}.'/'.$file.'.tpl: '.$!."\n");
+	}
+	else {
+		return(-1);
+	}
 	@temp     = <$fh>;
 	$template = join('',  @temp);
 	close($fh);
@@ -80,7 +83,6 @@ sub render {
 			my (%match_variables) = %variables;
 			while ($varstr =~ /([[:alnum:]]+):"(.*?)"/g) {
 				my ($key, $val) = ($1, $2);
-	#			$self->debug('internal replace: '.$key.' => '.$val, 0);
 				$match_variables{$key} = $val;
 			}
 			my $temp = $self->render($newfile, %match_variables);
