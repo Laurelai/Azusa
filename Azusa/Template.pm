@@ -16,8 +16,9 @@ sub new {
 	$self->{theme} = 'default';
 	$self->{path}  = './templates';
 
-	$self->{verbosity}    = 0;
-	$self->{errors_fatal} = 0;
+	$self->{verbosity}     = 0;
+	$self->{errors_fatal}  = 0;
+	$self->{max_recursion} = 2;
        	for( my $x = 0; $x < $#_; $x += 2 ){
                	$self->{$_[$x]} = $_[$x+1];
        	}
@@ -50,7 +51,7 @@ sub render {
 		# hm, well, i don't think i can check the args with caller() sec
 		my (@args) = called_args($x);
 		$called{$args[1]}++;
-		if ($called{$args[1]} >= 2) {
+		if ($called{$args[1]} >= $self->{max_recursion}) {
 			$recursion = 1;
 			print STDERR "*ERROR* Recursion detected in template ".(called_args($x-1))[1].": request for ".$args[1].". Cancelling replacement.\n";
 			return('*ERROR* RECURSION DETECTED. Template: '.$args[1].' (from '.$file.')');
@@ -59,14 +60,16 @@ sub render {
 	}
 #	return if ($depth > 5);
 	# tabs always sucked in this regard.
-	my ($fh, @temp, $template);
-	open($fh, '<', $self->{path}.'/'.$self->{theme}.'/'.$file.'.tpl');
-	$self->debug($!, 0) if ($!); 
-	if ($self->{errors_fatal}) {
-		die('*ERROR* Failed to render template '.$self->{path}.'/'.$self->{theme}.'/'.$file.'.tpl: '.$!."\n");
-	}
-	else {
-		return(-1);
+	my ($fh, @temp, $template, $error);
+	open($fh, '<', $self->{path}.'/'.$self->{theme}.'/'.$file.'.tpl') or $error = $!;
+	if ($error) {
+		$self->debug($error, 0);
+		if ($self->{errors_fatal}) {
+			die('*ERROR* Failed to render template '.$self->{path}.'/'.$self->{theme}.'/'.$file.'.tpl: '.$error."\n");
+		}
+		else {
+			return(-1);
+		}
 	}
 	@temp     = <$fh>;
 	$template = join('',  @temp);
