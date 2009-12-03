@@ -1,3 +1,7 @@
+#!/usr/bin/perl -w
+# use strict; # strict breaks this module as it uses symbol refs
+# This is more or less copy/pasted from cpan. 
+# It's used internally in Template for recursion detection
 package DB;
 sub called_args {
 	my ($level) = @_;

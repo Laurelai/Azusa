@@ -15,7 +15,9 @@ sub new {
        	my $self = shift;
        	# create a new Azusa object
        	$self = bless( { }, $self );        
-	$self->{verbosity} = 0;
+	$self->{verbosity}         = 0;
+	$self->{errors_fatal}      = 1;
+
        	for( my $x = 0; $x < $#_; $x += 2 ){
                	$self->{$_[$x]} = $_[$x+1];
        	}
@@ -46,7 +48,8 @@ sub login {
                 $self->{db_pass});
         if (!$temp || DBI->errstr) {
 		$self->debug('Failed to login to server: '.DBI->errstr, 0);
-                return(1);
+		die(DBI->errstr."\n") if ($self->{errors_fatal});
+                return(DBI->errstr);
         }
 	$self->{db_handle} = $temp;
         return(0);
@@ -54,9 +57,10 @@ sub login {
 
 sub query {
 	my ($self, $query) = (shift, shift); # keep the rest of @_ clean
-        my ($qstring, $temp, $dbh, $qh);
+        my ($qstring, $temp, $dbh, $qh, $errstr);
 	$self->debug($query, 0);
         $dbh               = $self->{db_handle};
+	$dbh->{RaiseError} = $self->{errors_fatal};
         $qstring           = '$qh = $dbh->prepare(sprintf($query';
         for (my $x = 0; $x <= $#_; $x++) {
                 next if (!$_[$x]);
@@ -65,8 +69,14 @@ sub query {
                         if ($_[$x] !~ /^(\d+)$/);
                 $qstring .= ', '.$isvar.'$_['.$x.']'.$isvar2;
         }
-	$qstring .= '));';
+	$qstring .= '))'.($self->{errors_fatal} ? ' or die($dbh->errstr);' : ';');
+	$self->debug($qstring, 0);
         eval($qstring);
+	if (0) { # $errstr) {
+		$self->debug('SQL Query error: '.$errstr, 0);
+		die($errstr."\n") if ($self->{errors_fatal});
+		return(0);
+	}
         $qh->execute;
         $self->{query_count}++;
         my (@return, @temp);
