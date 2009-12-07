@@ -58,19 +58,19 @@ sub login {
 sub query {
 	my ($self, $query) = (shift, shift); # keep the rest of @_ clean
         my ($qstring, $temp, $dbh, $qh, $errstr);
-	$self->debug($query, 0);
+	$self->debug($query, 2);
         $dbh               = $self->{db_handle};
 	$dbh->{RaiseError} = $self->{errors_fatal};
         $qstring           = '$qh = $dbh->prepare(sprintf($query';
         for (my $x = 0; $x <= $#_; $x++) {
-                next if (!$_[$x]);
+#                next if (!$_[$x]); # this is bad for %d and zeroes
                 my ($isvar, $isvar2);
                 ($isvar, $isvar2) = ('$dbh->quote(', ')')
                         if ($_[$x] !~ /^(\d+)$/);
                 $qstring .= ', '.$isvar.'$_['.$x.']'.$isvar2;
         }
 	$qstring .= '))'.($self->{errors_fatal} ? ' or die($dbh->errstr);' : ';');
-	$self->debug($qstring, 0);
+	$self->debug($qstring, 2);
         eval($qstring);
 	if (0) { # $errstr) {
 		$self->debug('SQL Query error: '.$errstr, 0);
@@ -80,10 +80,12 @@ sub query {
         $qh->execute;
         $self->{query_count}++;
         my (@return, @temp);
-        while (@temp = $qh->fetchrow_array) {
-                push(@return, @temp);
-        }
-	return(@return);
+	if ($query =~ /^SELECT/) {
+	        while (@temp = $qh->fetchrow_array) {
+	                push(@return, @temp);
+	        }
+		return(@return);
+	}
 }
 
 sub last_insert_id {

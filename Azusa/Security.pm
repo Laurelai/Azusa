@@ -36,10 +36,7 @@ sub debug {
        	return( undef );
 }
 
-sub hash {
-	my ($text) = @_;
-	return(md5_hex($text));
-}
+sub hash { sha1_hex(md5_hex($_[1])); }
 
 
 1;

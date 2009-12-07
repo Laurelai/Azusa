@@ -54,7 +54,7 @@ h1 {
   </style>
  </head>
  <body>
-  <h1>Exception raised</h1>Subroutine <strong>$routine</strong> within module <strong>$module</strong> raised exception: <strong>$error</strong><br /><hr />
+  <h1>Exception raised</h1>Subroutine <strong>$routine</strong> within module <strong>$module</strong> raised exception: <br /><pre><strong>$error</strong></pre><br /><hr />
   <div class="trace"><pre>$traceback</pre></div>
   <hr />
   <address>powered by libAzusa version $azusa_version</address>
