@@ -51,12 +51,14 @@ sub login {
 		die(DBI->errstr."\n") if ($self->{errors_fatal});
                 return(DBI->errstr);
         }
-	$self->{db_handle} = $temp;
+	$self->{db_handle}    = $temp;
+	$self->{db_logged_in} = 1;
         return(0);
 }
 
 sub query {
 	my ($self, $query) = (shift, shift); # keep the rest of @_ clean
+	$self->login if (!$self->{db_logged_in});
         my ($qstring, $temp, $dbh, $qh, $errstr);
 	$self->debug($query, 2);
         $dbh               = $self->{db_handle};
