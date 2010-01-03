@@ -50,6 +50,16 @@ sub debug {
        	return( undef );
 }
 
+sub path {
+	my ($self, $path) = @_;
+	$self->{path} = $path;
+}
+
+sub theme {
+	my ($self, $theme) = @_;
+	$self->{theme} = $theme;
+}
+
 sub render {
 	my ($self, $file, %variables) = @_;
 	use DB;
