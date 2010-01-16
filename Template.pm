@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 package Azusa::Template;
 use Azusa::caller qw[called_args];
+use Azusa::version;
 use strict;
 # use warnings;
 use vars qw/$VERSION/;
