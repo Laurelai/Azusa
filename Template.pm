@@ -21,14 +21,19 @@ sub new {
 	$self->{errors_fatal}   = 0;
 	$self->{max_recursion}  = 2;
 	$self->{sess_variables} = 0;
+	$self->{cgi_variables}  = 0;
+	
        	for( my $x = 0; $x < $#_; $x += 2 ){
                	$self->{$_[$x]} = $_[$x+1];
        	}
 
-#	handle session variables
-#	disable the interpolation if no sess_handle is passed
+#	handle session and cgi variable interpolation
+#	disable the interpolation if no sess/cgi_handle is passed
 	if ($self->{sess_variables}) {
 		$self->{sess_variables} = 0 if (!$self->{sess_handle});
+	}
+	if ($self->{cgi_variables}) {
+		$self->{cgi_variables}  = 0 if (!$self->{cgi_handle});
 	}
 
 	$self->{theme} = 'default' if (!$self->{theme});
@@ -92,20 +97,24 @@ sub render {
 	$template = join('',  @temp);
 	close($fh);
 #	while ($template =~ /(\&\([[:alnum:])_\/)]+ \? "(.*)" : "(.*)"\))/g) {
-#	thanks txt2re!
-	while ($template =~ /((&)(\()((?:[a-z][a-z0-9_.]*))( )(\?)( )"(.*?)"( )(:)( )"(.*?)"(\)))/g) {
+	while ($template =~ /(\&\(\s*([^ ]+)\s+\?\s+"(.*?)"\s+:\s+"(.*?)"\s*\))/g) {
 #		handle tri-part if blocks. 
 		my $block      = $1;
-		my $variable   = $4;
-		my $true_case  = $8;
-		my $false_case = $12;
+		my $variable   = $2;
+		my $true_case  = $3;
+		my $false_case = $4;
 		$self->debug('if block caught, variable: '.$variable, 2);
 		$block = quotemeta($block);
 		my $repl;
-                if ($variable =~ /^sess\./ && $self->{sess_handle}) { # session variable
+                if ($variable =~ /^sess\./ && $self->{sess_variables}) { # session variable
 #                       strip out the sess. part
                         $variable =~ s/^sess\.//;
                         $repl = $self->{sess_handle}->param($variable);
+                }
+                elsif ($variable =~ /^cgi\./ && $self->{cgi_variables}) { # cgi variable
+#                       strip out the cgi. part
+                        $variable =~ s/^cgi\.//;
+                        $repl = $self->{cgi_handle}->param($variable);
                 }
                 else {
                         $repl = $variables{$variable}
@@ -149,10 +158,19 @@ sub render {
 	while ($template =~ /\${([[:alnum:]._\/]+)\}/g) {
 		my $repl;
 		my $var = $1;
-		if ($var =~ /^sess\./ && $self->{sess_handle}) { # session variable
+		if ($var =~ /^sess\./ && $self->{sess_variables}) { # session variable
 #			strip out the sess. part
-			$var =~ s/^sess\.//;
-			$repl = $self->{sess_handle}->param($var);
+			my $tmpvar = $var;
+			$tmpvar =~ s/^sess\.//;
+			$repl = $self->{sess_handle}->param($tmpvar);
+			$self->debug('session variable '.$tmpvar.' replacing with '.$repl, 2);
+		}
+		if ($var =~ /^cgi\./ && $self->{cgi_variables}) { # cgi variable
+#			strip out the cgi. part
+			my $tmpvar = $var;
+			$tmpvar =~ s/^cgi\.//;
+			$repl = $self->{cgi_handle}->param($tmpvar);
+			$self->debug('cgi variable '.$tmpvar.' replacing with '.$repl, 2);
 		}
 		else {
 			$repl = $variables{$var};
