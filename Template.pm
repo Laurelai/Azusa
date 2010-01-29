@@ -82,19 +82,6 @@ sub theme {
 
 sub render {
 	my ($self, $file, %variables) = @_;
-	use DB;
-	my ($depth, %called, $recursion) = (0, undef, undef);
-	$| = 1;
-	for (my $x = 0; (caller($x))[3]; $x++) {
-		my (@args) = called_args($x);
-		$called{$args[1]}++;
-		if ($called{$args[1]} >= $self->{max_recursion}) {
-			$recursion = 1;
-			print STDERR "*ERROR* Recursion detected in template ".(called_args($x-1))[1].": request for ".$args[1].". Cancelling replacement.\n";
-			return('*ERROR* RECURSION DETECTED. Template: '.$args[1].' (from '.$file.')');
-		}
-		$depth++;
-	}
 #	return if ($depth > 5);
 	my ($fh, @temp, $template, $error);
 	open($fh, '<', $self->{path}.'/'.$self->{theme}.'/'.$file.'.tpl') or $error = $!;
@@ -110,6 +97,23 @@ sub render {
 	@temp     = <$fh>;
 	$template = join('',  @temp);
 	close($fh);
+	return($self->parse($template, %variables));
+}
+sub parse{
+	my ($self, $template, %variables) = @_; 
+	use DB;
+	my ($depth, %called, $recursion) = (0, undef, undef);
+	$| = 1;
+	for (my $x = 0; (caller($x))[3]; $x++) {
+		my (@args) = called_args($x);
+		$called{$args[1]}++;
+		if ($called{$args[1]} >= $self->{max_recursion}) {
+			$recursion = 1;
+			print STDERR "*ERROR* Recursion detected in template ".(called_args($x-1))[1].": request for ".$args[1].". Cancelling replacement.\n";
+			return('*ERROR* RECURSION DETECTED. Template: '.$args[1]);
+		}
+		$depth++;
+	}
 #	while ($template =~ /(\&\([[:alnum:])_\/)]+ \? "(.*)" : "(.*)"\))/g) {
 	while ($template =~ /(&\((.*?)\s+(.*?)\s+"(.*?)"\s+\?\s+"(.*?)"\s+:\s+"(.*?)"\))/g) {
 #		handle tri-part if blocks with matching.
@@ -257,7 +261,6 @@ sub render {
 			$repl = $variables{$var};
 		}
 		if ($self->{anti_xss} && $anti_xss_flag) {
-			$self->debug('Anti-XSS measures on variable '.$var, 1);
 			$repl     = encode_entities($repl);
 		}
 		$var      = quotemeta($var);
