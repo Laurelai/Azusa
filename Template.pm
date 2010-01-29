@@ -250,7 +250,7 @@ sub parse{
 			$repl = $self->{sess_handle}->param($tmpvar);
 			$self->debug('session variable '.$tmpvar.' ('.$var.') replacing with '.$repl, 2);
 		}
-		if ($var =~ /^cgi\./ && $self->{cgi_variables}) { # cgi variable
+		elsif ($var =~ /^cgi\./ && $self->{cgi_variables}) { # cgi variable
 #			strip out the cgi. part
 			my $tmpvar = $var;
 			$tmpvar =~ s/^cgi\.//;
@@ -263,14 +263,12 @@ sub parse{
 		if ($self->{anti_xss} && $anti_xss_flag) {
 			$repl     = encode_entities($repl);
 		}
-		$var      = quotemeta($var);
+		$self->debug('var is '.$var.': ${'.$var.$anti_xss_flag.'} replaced with '.$repl, 2);
+		$var           = quotemeta($var);
+#		$anti_xss_flag = quotemeta($anti_xss_flag);
+		$self->debug('var is '.$var.': ${'.$var.$anti_xss_flag.'} replaced with '.$repl, 2);
 		$template =~ s/\${$var$anti_xss_flag}/$repl/g;
 	}
-
-#	this sucks.
-#	foreach my $key (sort(keys(%variables))) {
-#		$template =~ s/\${$key}/$variables{$key}/g;
-#	}
 	return($template);
 }
 
