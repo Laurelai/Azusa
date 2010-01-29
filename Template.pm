@@ -37,9 +37,9 @@ sub new {
 	}
 
 	$self->{theme} = 'default' if (!$self->{theme});
-       	$self->{ 'debug_depth' } = 0;
+#       	$self->{ 'debug_depth' } = 0;
        	debug( $self, 'Creating new Azusa::Template object: '.$self, 10 );
-       	$self->{ 'debug_depth' } = 1;
+#       	$self->{ 'debug_depth' } = 1;
        	return( $self );
 }
 
@@ -97,6 +97,59 @@ sub render {
 	$template = join('',  @temp);
 	close($fh);
 #	while ($template =~ /(\&\([[:alnum:])_\/)]+ \? "(.*)" : "(.*)"\))/g) {
+	while ($template =~ /(&\((.*?)\s+(.*?)\s+"(.*?)"\s+\?\s+"(.*?)"\s+:\s+"(.*?)"\))/g) {
+#		handle tri-part if blocks with matching.
+		my $block      = $1;
+		my $variable   = $2;
+		my $function   = $3;
+		my $check      = $4;
+		my $true_case  = $5;
+		my $false_case = $6;
+		$self->debug('if/match block caught, variable: '.$variable.', function '.$function.', check '.$check, 2);
+		$block = quotemeta($block);
+		my $repl;
+                if ($variable =~ /^sess\./ && $self->{sess_variables}) { # session variable
+#                       strip out the sess. part
+                        $variable =~ s/^sess\.//;
+                        $repl = $self->{sess_handle}->param($variable);
+                }
+                elsif ($variable =~ /^cgi\./ && $self->{cgi_variables}) { # cgi variable
+#                       strip out the cgi. part
+                        $variable =~ s/^cgi\.//;
+                        $repl = $self->{cgi_handle}->param($variable);
+                }
+                else {
+                        $repl = $variables{$variable}
+                }
+
+		my $is_true;
+		$self->debug('checking if '.$repl.' '.$function.' '.$check, 2);
+		if ($function eq '==') { # match check
+			if ($repl eq $check) { $is_true = 1; }
+			else { $is_true = 0; }
+		}
+		if ($function eq '!=') { # match check
+			if ($repl ne $check) { $is_true = 1; }
+			else { $is_true = 0; }
+		}
+		if ($function eq '>') { # match check
+			if ($repl gt $check) { $is_true = 1; }
+			else { $is_true = 0; }
+		}
+		if ($function eq '<') { # match check
+			if ($repl lt $check) { $is_true = 1; }
+			else { $is_true = 0; }
+		}
+
+		if ($is_true) {
+			$self->debug('block evaluated to true', 2);
+			$template =~ s/$block/$true_case/;
+		}
+		else {
+			$self->debug('block evaluated to false', 2);
+			$template =~ s/$block/$false_case/;
+		}
+	}
 	while ($template =~ /(\&\(\s*([^ ]+)\s+\?\s+"(.*?)"\s+:\s+"(.*?)"\s*\))/g) {
 #		handle tri-part if blocks. 
 		my $block      = $1;
