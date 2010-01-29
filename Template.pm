@@ -22,10 +22,24 @@ sub new {
 	$self->{max_recursion}  = 2;
 	$self->{sess_variables} = 0;
 	$self->{cgi_variables}  = 0;
-	
+	$self->{anti_xss}       = 1;
+
        	for( my $x = 0; $x < $#_; $x += 2 ){
                	$self->{$_[$x]} = $_[$x+1];
        	}
+	if ($self->{anti_xss}) {
+		my $found_html_entities;
+		foreach my $directory (@INC) {
+			$found_html_entities = 1 if (-e $directory.'/HTML/Entities.pm');
+		}
+		if (!$found_html_entities) {
+			$self->debug('HTML::Entities not found. Disabling anti-XSS measures.');
+			$self->{anti_xss} = 0;
+		}
+		else {
+			eval('use HTML::Entities;');
+		}
+	}
 
 #	handle session and cgi variable interpolation
 #	disable the interpolation if no sess/cgi_handle is passed
@@ -141,6 +155,11 @@ sub render {
 			else { $is_true = 0; }
 		}
 
+		if ($self->{anti_xss}) {
+#			$true_case  = encode_entities($true_case);
+#			$false_case = encode_entities($false_case);
+		}
+	
 		if ($is_true) {
 			$self->debug('block evaluated to true', 2);
 			$template =~ s/$block/$true_case/;
@@ -172,7 +191,10 @@ sub render {
                 else {
                         $repl = $variables{$variable}
                 }
-
+		if ($self->{anti_xss}) {
+#			$true_case  = encode_entities($true_case);
+#			$false_case = encode_entities($false_case);
+		}
 		if ($repl) {
 			$self->debug('block evaluated to true', 2);
 			$template =~ s/$block/$true_case/;
@@ -208,15 +230,21 @@ sub render {
 	}
 #	swap out individual variables
 
-	while ($template =~ /\${([[:alnum:]._\/]+)\}/g) {
+	while ($template =~ /\$\{(.*?)\}/g) {
+		my $var  = $1;
+		my $anti_xss_flag;
+		if (substr($var, -1) eq '*') {
+			$var = substr($var, 0, -1);
+			$anti_xss_flag = '\*';
+			$self->debug('Enabling Anti-XSS for \''.$var.'\'', 2);
+		}
 		my $repl;
-		my $var = $1;
 		if ($var =~ /^sess\./ && $self->{sess_variables}) { # session variable
 #			strip out the sess. part
 			my $tmpvar = $var;
 			$tmpvar =~ s/^sess\.//;
 			$repl = $self->{sess_handle}->param($tmpvar);
-			$self->debug('session variable '.$tmpvar.' replacing with '.$repl, 2);
+			$self->debug('session variable '.$tmpvar.' ('.$var.') replacing with '.$repl, 2);
 		}
 		if ($var =~ /^cgi\./ && $self->{cgi_variables}) { # cgi variable
 #			strip out the cgi. part
@@ -228,7 +256,12 @@ sub render {
 		else {
 			$repl = $variables{$var};
 		}
-		$template =~ s/\${$var}/$repl/g;
+		if ($self->{anti_xss} && $anti_xss_flag) {
+			$self->debug('Anti-XSS measures on variable '.$var, 1);
+			$repl     = encode_entities($repl);
+		}
+		$var      = quotemeta($var);
+		$template =~ s/\${$var$anti_xss_flag}/$repl/g;
 	}
 
 #	this sucks.
