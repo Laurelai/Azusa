@@ -36,7 +36,7 @@ sub debug {
        	return( undef );
 }
 
-sub hash { sha1_hex(md5_hex($_[1])); }
+sub hash { sha1_hex(md5_hex($_[1]).$_[2]); }
 
 
 1;

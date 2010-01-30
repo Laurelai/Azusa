@@ -173,7 +173,8 @@ sub parse{
 			$template =~ s/$block/$false_case/;
 		}
 	}
-	while ($template =~ /(\&\(\s*([^ ]+)\s+\?\s+"(.*?)"\s+:\s+"(.*?)"\s*\))/g) {
+#	while ($template =~ /(\&\(\s*([^ ]+)\s+\?\s+"(.*?)"\s+:\s+"(.*?)"\s*\))/g) {
+	while ($template =~ /(\&\((.*?) \? "((?:\\"|[^"])+?)" : "((?:\\"|[^"])+?)"\))/g) {
 #		handle tri-part if blocks. 
 		my $block      = $1;
 		my $variable   = $2;

@@ -13,6 +13,8 @@ sub new {
        	# create a new Azusa object
        	$self = bless( { }, $self );
 	$self->{verbosity} = 0;
+	$self->{session_ip_check} = 1;
+
        	for( my $x = 0; $x < $#_; $x += 2 ){
                	$self->{$_[$x]} = $_[$x+1];
        	}
@@ -25,11 +27,22 @@ sub new {
 		if ( $self->{session}->is_expired || !$self->id ) { # if the session died or is empty (we fill it with a stub) recreate it
 			$self->{session} = $self->{session}->new();
 			$self->debug('new session '.$self->id, 1);
-			$self->param('azusa', 'true');
+			$self->param('_azusa_ip', $ENV{REMOTE_ADDR});
 			$self->expire(0); # let the user set an expiration
 		}
 		else {
 			$self->debug('returning session '.$self->id, 1);
+			if ($self->{session_ip_check}) {
+				if ($self->param('_azusa_ip') ne $ENV{REMOTE_ADDR}) {
+					$self->debug('Session IP does not match (possible hack attempt)! IP: '.$ENV{REMOTE_ADDR}.' versus recorded '.$self->param('_azusa_ip'), 0);
+					$self->clear;
+					$self->delete;
+					$self->{session} = $self->{session}->new();
+					$self->debug('new session '.$self->id, 1);
+					$self->param('_azusa_ip', $ENV{REMOTE_ADDR});
+					$self->expire(0); # let the user set an expiration	
+				}
+			}
 		}
 	}
 	else {
