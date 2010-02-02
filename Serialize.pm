@@ -4,7 +4,6 @@ package Azusa::Serialize;
 use strict;
 use warnings;
 use vars qw/$VERSION/;
-# encoding
 use MIME::Base64;
 
 $VERSION = '0.0.2';

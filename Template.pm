@@ -33,8 +33,12 @@ sub new {
 			$found_html_entities = 1 if (-e $directory.'/HTML/Entities.pm');
 		}
 		if (!$found_html_entities) {
-			$self->debug('HTML::Entities not found. Disabling anti-XSS measures.');
+			$self->debug('HTML::Entities not found. Disabling anti-XSS measures.', 1);
 			$self->{anti_xss} = 0;
+			if ($self->{errors_fatal}) {
+				use Azusa::CGIErrors;
+				die('Unable to create new Azusa::Template object: HTML::Entities not found. Please disable the anti_xss setting or install HTML::Entities (cpan -i HTML::Entities)');
+			}
 		}
 		else {
 			eval('use HTML::Entities;');
@@ -51,9 +55,7 @@ sub new {
 	}
 
 	$self->{theme} = 'default' if (!$self->{theme});
-#       	$self->{ 'debug_depth' } = 0;
        	debug( $self, 'Creating new Azusa::Template object: '.$self, 10 );
-#       	$self->{ 'debug_depth' } = 1;
        	return( $self );
 }
 
@@ -82,7 +84,6 @@ sub theme {
 
 sub render {
 	my ($self, $file, %variables) = @_;
-#	return if ($depth > 5);
 	my ($fh, @temp, $template, $error);
 	open($fh, '<', $self->{path}.'/'.$self->{theme}.'/'.$file.'.tpl') or $error = $!;
 	if ($error) {
@@ -109,14 +110,15 @@ sub parse{
 		$called{$args[1]}++;
 		if ($called{$args[1]} >= $self->{max_recursion}) {
 			$recursion = 1;
-			print STDERR "*ERROR* Recursion detected in template ".(called_args($x-1))[1].": request for ".$args[1].". Cancelling replacement.\n";
-			return('*ERROR* RECURSION DETECTED. Template: '.$args[1]);
+			$self->debug("*ERROR* Recursion detected in template ".(called_args($x-1))[1].": request for ".$args[1].". Cancelling replacement.", 1);
+			if ($self->{errors_fatal}) {
+				die('Template recursion detected in template '.(called_args($x-1))[1].'. Please check your template files or boost the max_recursion setting.');
+			}
 		}
 		$depth++;
 	}
-#	while ($template =~ /(\&\([[:alnum:])_\/)]+ \? "(.*)" : "(.*)"\))/g) {
 	while ($template =~ /(&\((.*?)\s+(.*?)\s+"(.*?)"\s+\?\s+"(.*?)"\s+:\s+"(.*?)"\))/g) {
-#		handle tri-part if blocks with matching.
+#		handle tri-part if blocks (comparison matching)
 		my $block      = $1;
 		my $variable   = $2;
 		my $function   = $3;
@@ -159,11 +161,6 @@ sub parse{
 			else { $is_true = 0; }
 		}
 
-		if ($self->{anti_xss}) {
-#			$true_case  = encode_entities($true_case);
-#			$false_case = encode_entities($false_case);
-		}
-	
 		if ($is_true) {
 			$self->debug('block evaluated to true', 2);
 			$template =~ s/$block/$true_case/;
@@ -173,9 +170,8 @@ sub parse{
 			$template =~ s/$block/$false_case/;
 		}
 	}
-#	while ($template =~ /(\&\(\s*([^ ]+)\s+\?\s+"(.*?)"\s+:\s+"(.*?)"\s*\))/g) {
 	while ($template =~ /(\&\((.*?) \? "((?:\\"|[^"])+?)" : "((?:\\"|[^"])+?)"\))/g) {
-#		handle tri-part if blocks. 
+#		handle tri-part if blocks (single parameter true/false)
 		my $block      = $1;
 		my $variable   = $2;
 		my $true_case  = $3;
@@ -211,8 +207,7 @@ sub parse{
 	}
 
 	if (!$recursion) { 
-#		if we aren't in a recursive loop, go ahead and include external templates. 
-#		substitute in external templates with variablesk
+#		substitute in external templates with variables
 		while ($template =~ /(\#\{([[:alnum:]_\/]+) (.*?)\})/g) {
 			my $match   = $1;
 			my $newfile = $2;
@@ -226,15 +221,15 @@ sub parse{
 			$template =~ s/$match/$temp/;
 			$template =~ s/\#\{$newfile (.*?)\}/$temp/;
 		}
-#		substitute in external templates
+#		substitute in external templates (same variable set)
 		while ($template =~ /\%\{([[:alnum:]_\/]+)\}/g) {
 			my $newfile = $1; 
 			my $temp = $self->render($newfile, %variables);
 			$template =~ s/\%\{$newfile\}/$temp/;
 		}
 	}
-#	swap out individual variables
 
+#	swap out individual variables
 	while ($template =~ /\$\{(.*?)\}/g) {
 		my $var  = $1;
 		my $anti_xss_flag;
@@ -264,10 +259,7 @@ sub parse{
 		if ($self->{anti_xss} && $anti_xss_flag) {
 			$repl     = encode_entities($repl);
 		}
-		$self->debug('var is '.$var.': ${'.$var.$anti_xss_flag.'} replaced with '.$repl, 2);
 		$var           = quotemeta($var);
-#		$anti_xss_flag = quotemeta($anti_xss_flag);
-		$self->debug('var is '.$var.': ${'.$var.$anti_xss_flag.'} replaced with '.$repl, 2);
 		$template =~ s/\${$var$anti_xss_flag}/$repl/g;
 	}
 	return($template);

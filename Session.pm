@@ -34,7 +34,7 @@ sub new {
 			$self->debug('returning session '.$self->id, 1);
 			if ($self->{session_ip_check}) {
 				if ($self->param('_azusa_ip') ne $ENV{REMOTE_ADDR}) {
-					$self->debug('Session IP does not match (possible hack attempt)! IP: '.$ENV{REMOTE_ADDR}.' versus recorded '.$self->param('_azusa_ip'), 0);
+					$self->debug('Session IP does not match (possible hack attempt)! IP: '.$ENV{REMOTE_ADDR}.' versus recorded '.$self->param('_azusa_ip'), 1);
 					$self->clear;
 					$self->delete;
 					$self->{session} = $self->{session}->new();

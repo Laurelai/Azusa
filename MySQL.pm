@@ -65,7 +65,6 @@ sub query {
 	$dbh->{RaiseError} = $self->{errors_fatal};
         $qstring           = '$qh = $dbh->prepare(sprintf($query';
         for (my $x = 0; $x <= $#_; $x++) {
-#                next if (!$_[$x]); # this is bad for %d and zeroes
                 my ($isvar, $isvar2);
                 ($isvar, $isvar2) = ('$dbh->quote(', ')')
                         if ($_[$x] !~ /^(\d+)$/);
