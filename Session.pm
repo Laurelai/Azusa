@@ -63,8 +63,7 @@ sub cookie { CGI::Cookie->new(-name => $_[0]->{session}->name, -value => $_[0]->
 
 sub debug {
        	my( $self, $message, $verbosity ) = @_;
-
-       	if( $self->{'verbosity'} >= $verbosity ) {
+       	if ($self->{'verbosity'} && $self->{'verbosity'} >= $verbosity) {
                	my( $package, $filename, $line, $subroutine ) = caller( $self->{'debug_depth'} );
                	$subroutine                                   = "main::main" if( !$subroutine );
                	$filename                                     = $0 if( !$filename );

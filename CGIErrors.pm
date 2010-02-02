@@ -1,6 +1,8 @@
 #!/usr/bin/perl -w
 use strict;
-
+use Time::HiRes qw/gettimeofday/;
+my $__azusa_start_time = time.'.'.int((gettimeofday)[1] / 1000);
+$Azusa::CGIErrors::__azusa_benchmarking = 0;
 BEGIN {
 	use Azusa::version;
 	my $azusa_version = Azusa::version::version();
@@ -64,5 +66,14 @@ EOF
                	exit(1) if (!$sandbox);
        	}
 };
+
+END {
+	if ($Azusa::CGIErrors::__azusa_benchmarking) {
+		my $__azusa_end_time = time.'.'.int((gettimeofday)[1] / 1000);
+		print STDERR 'Azusa benchmarking: runtime for '.$0.' was '.sprintf('%.3f', $__azusa_end_time - $__azusa_start_time)."ms\n";
+	}
+};
+
+
 
 1;
