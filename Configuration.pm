@@ -33,7 +33,7 @@ sub load {
 		undef($key); undef($val);
 		chomp($buffer);
 		next if ($buffer =~ /^#/ || !$buffer || $buffer =~ /^\s+$/);
-		if ($buffer =~ m/(.*?)\s+=\s+"((?:\\"|[^"])+?)"/) {
+		if ($buffer =~ m/\s*(.*?)\s*=\s*"((?:\\"|[^"])+?)"/) {
 			($key, $val) = ($1, $2);
 			$val         =~ s/\\"/"/g;
 		}
