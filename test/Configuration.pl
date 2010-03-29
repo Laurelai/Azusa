@@ -20,7 +20,16 @@ print "passed\ntest #4: ";
 die("failed\n") if ($info{test4} ne 'i wish i was a bird');
 print "passed\ntest #5: ";
 die("failed\n") if ($info{test5} ne '~~~*($@%@$#^@#$^@*!');
-print "passed\npassed all tests!\n";
+print "passed\ntest #6: ";
+die("failed\n") if ($info{test6} ne 'desu~');
+print "passed\npassed first test suite\n";
+
+print "testing parsing errors\n";
+print "test #1: ";
+$conf->{strict_syntax} = 1;
+($lp, $err) = $conf->load('test2.conf', \%info);
+die("failed\n") if ($lp);
+print "passed\npassed second test suite\n";
 
 exit(0);
 

@@ -38,7 +38,7 @@ sub load {
 			$val         =~ s/\\"/"/g;
 		}
 		else {
-			return((0, 'Syntax error on line '.$line)) if ($self->{strict_syntax});
+			return((0, 'Syntax error on line '.$line.' near: > '.$buffer)) if ($self->{strict_syntax});
 			next;
 		}
 		$config->{$key} = $val;

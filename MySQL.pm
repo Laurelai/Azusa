@@ -14,7 +14,7 @@ $VERSION = '0.0.2';
 sub new {
        	my $self = shift;
        	# create a new Azusa object
-       	$self = bless( { }, $self );        
+       	$self = bless( { }, $self );
 	$self->{verbosity}         = 0;
 	$self->{errors_fatal}      = 1;
 
@@ -29,9 +29,12 @@ sub new {
 
 sub debug {
        	my( $self, $message, $verbosity ) = @_;
-
+	my $call_level = $self->{'debug_depth'};
        	if ($self->{'verbosity'} && $self->{'verbosity'} >= $verbosity) {
-               	my( $package, $filename, $line, $subroutine ) = caller( $self->{'debug_depth'} );
+               	my( $package, $filename, $line, $subroutine ) = caller( $call_level );
+               	while ($filename =~ /^\(eval \d+\)$/) { # we're in an eval. go up one
+			( $package, $filename, $line, $subroutine ) = caller($call_level++);
+		}
                	$subroutine                                   = "main::main" if( !$subroutine );
                	$filename                                     = $0 if( !$filename );
                	$message                                      = '(debug) '.( split( /::/, $subroutine ) )[-1].'@'.$filename.' - '.$message."\n";
@@ -64,6 +67,7 @@ sub query {
         $dbh               = $self->{db_handle};
 	$dbh->{RaiseError} = $self->{errors_fatal};
         $qstring           = '$qh = $dbh->prepare(sprintf($query';
+        no warnings;
         for (my $x = 0; $x <= $#_; $x++) {
                 my ($isvar, $isvar2);
                 ($isvar, $isvar2) = ('$dbh->quote(', ')')
@@ -73,6 +77,7 @@ sub query {
 	$qstring .= '))'.($self->{errors_fatal} ? ' or die($dbh->errstr);' : ';');
 	$self->debug($qstring, 2);
         eval($qstring);
+        use warnings;
 	if (0) { # $errstr) {
 		$self->debug('SQL Query error: '.$errstr, 0);
 		die($errstr."\n") if ($self->{errors_fatal});
