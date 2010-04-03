@@ -33,10 +33,21 @@ sub load {
 		undef($key); undef($val);
 		chomp($buffer);
 		next if ($buffer =~ /^#/ || !$buffer || $buffer =~ /^\s+$/);
-		if ($buffer =~ m/\s*(.*?)\s*=\s*"((?:\\"|[^"])+?)"/) {
+		if ($buffer =~ m/\s*(.*?)\s*=\s*"((?:\\"|[^"])+?)"\s*$/) {
 			($key, $val) = ($1, $2);
 			$val         =~ s/\\"/"/g;
 		}
+		elsif ($buffer =~ m/\s*(.*?)\s*=\s*"((?:\\"|[^"])+?)"\s*,.*/) { # match an array
+			$key        = $1;
+			# just discard the first match, we get it again. 
+			my (@array, $tempval);
+			while ($buffer =~ /,?\s*"((?:\\"|[^"])+?)"\s*/g) {
+				my $tempval = $1;
+				$self->debug('Matching array value '.($#array + 2).' to '.$tempval, 2);
+				push(@array, $tempval);
+			}
+			$val = \@array;
+		}	
 		else {
 			return((0, 'Syntax error on line '.$line.' near: > '.$buffer)) if ($self->{strict_syntax});
 			next;
