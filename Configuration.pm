@@ -33,12 +33,14 @@ sub load {
 		undef($key); undef($val);
 		chomp($buffer);
 		next if ($buffer =~ /^#/ || !$buffer || $buffer =~ /^\s+$/);
-		if ($buffer =~ m/\s*(.*?)\s*=\s*"((?:\\"|[^"])+?)"\s*$/) {
+		if ($buffer =~ m/\s*(.*?)\s*=\s*"((?:\\"|[^"])+?)"\s*(?:\#.*)?$/) {
+			$self->debug('Scalar match', 4);
 			($key, $val) = ($1, $2);
 			$val         =~ s/\\"/"/g;
 		}
 		elsif ($buffer =~ m/\s*(.*?)\s*=\s*"((?:\\"|[^"])+?)"\s*,.*/) { # match an array
 			$key        = $1;
+			$self->debug('Array match', 4);
 			# just discard the first match, we get it again. 
 			my (@array, $tempval);
 			while ($buffer =~ /,?\s*"((?:\\"|[^"])+?)"\s*/g) {

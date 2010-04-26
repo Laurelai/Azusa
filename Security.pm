@@ -38,5 +38,35 @@ sub debug {
 
 sub hash { sha1_hex(md5_hex($_[1]).$_[2]); }
 
+sub aphash {
+        my ($password, $revflag) = @_;
+        my ($salt, @chars, $hash);
+        @chars = split(//, $password);
+        @chars = reverse(@chars) if ($revflag);
+        $salt = 0;
+        my $i = 0;
+        foreach my $char (@chars) {
+                $i++;
+                # simple AP hash
+                $salt ^= (($i & 1) == 0) ? ( ($salt << 7) ^ ord($char) ^ ($salt >> 3) ) : (~(($salt << 11) ^ ord($char) ^ ($salt >> 5)));
+
+        }
+#       printf("genkey %s\n", $salt);
+        srand($salt);
+        $salt  = rand(65536);
+        $salt .= int(rand(9)) while (length($salt) < 18);
+        $salt  =~ s/\.//g;
+#       printf("parthash: %x revflag: %d\n", $salt, $revflag);
+        return($salt) if ($revflag);
+        $salt .= gen_salt($password, 1);
+        $salt  = substr($salt, 0, 32);
+        @chars = split(//, $salt);
+        undef($salt);
+        for (my $x = 0; $x < 32; $x += 2) {
+                $salt .= sprintf('%02x', $chars[$x].$chars[$x+1]);
+        }
+        return($salt);
+}	
+
 
 1;
