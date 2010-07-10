@@ -61,7 +61,7 @@ h1 {
   <hr />
    Runtime: $azusa_runtime seconds
   <hr />
-  <address>powered by Azusa :: <a href="http://projects.sokudo.us/"http://projects.sokudo.us/</a></address>
+  <address>powered by Azusa :: <a href="http://projects.sokudo.us/">http://projects.sokudo.us/</a></address>
  </body>
 </html>
 EOF
