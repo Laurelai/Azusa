@@ -4,8 +4,7 @@ use Time::HiRes qw/gettimeofday/;
 my $__azusa_start_time = time.'.'.int((gettimeofday)[1] / 1000);
 $Azusa::CGIErrors::__azusa_benchmarking = 0;
 BEGIN {
-	use Azusa::version;
-	my $azusa_version = Azusa::version::version();
+	my $__azusa_start_time = time.'.'.int((gettimeofday)[1] / 1000);
        	$SIG{__DIE__}  = \&handleErrors;
        	$SIG{__WARN__} = \&handleWarnings;
 	
@@ -36,6 +35,7 @@ BEGIN {
 			$sandbox = 0 if ($sub =~ /BEGIN/);
                        	$traceback .= (('&nbsp;' x 2) x $z).($z ? '\_ ' : ' |-').$addr.': <strong>'.$sub.'</strong> at line '.(caller($x))[2].' in file '.(caller($x))[1]."\n";
                	}
+		my $azusa_runtime = (time.'.'.int((gettimeofday)[1] / 1000) - $__azusa_start_time);
                	print <<EOF;
 Content-type: text/html
 
@@ -59,7 +59,9 @@ h1 {
   <h1>Exception raised</h1>Subroutine <strong>$routine</strong> within module <strong>$module</strong> raised exception: <br /><pre><strong>$error</strong></pre><br /><hr />
   <div class="trace"><pre>$traceback</pre></div>
   <hr />
-  <address>powered by libAzusa version $azusa_version</address>
+   Runtime: $azusa_runtime seconds
+  <hr />
+  <address>powered by Azusa :: http://</address>
  </body>
 </html>
 EOF
