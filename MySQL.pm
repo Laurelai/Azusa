@@ -62,6 +62,7 @@ sub login {
 sub query {
 	my ($self, $query) = (shift, shift); # keep the rest of @_ clean
 	$self->login if (!$self->{db_logged_in});
+	$self->{mysql_err} = 0;
         my ($qstring, $temp, $dbh, $qh, $errstr);
 	$self->debug($query, 2);
         $dbh               = $self->{db_handle};
@@ -78,10 +79,11 @@ sub query {
 	$self->debug($qstring, 2);
         eval($qstring);
         use warnings;
-	if (0) { # $errstr) {
-		$self->debug('SQL Query error: '.$errstr, 0);
-		die($errstr."\n") if ($self->{errors_fatal});
-		return(0);
+	if (DBI->errstr) { # $errstr) {
+		$self->debug('SQL Query error: '.DBI->errstr, 0);
+		die(DBI->errstr."\n") if ($self->{errors_fatal});
+		$self->{mysql_err} = 1;
+		return(DBI->errstr);
 	}
         $qh->execute;
         $self->{query_count}++;
